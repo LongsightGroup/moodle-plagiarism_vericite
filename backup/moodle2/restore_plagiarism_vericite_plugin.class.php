@@ -27,6 +27,18 @@ class restore_plagiarism_vericite_plugin extends restore_plagiarism_plugin {
         $elepath = $this->get_pathfor('vericite_configs/vericite_config');
         $paths[] = new restore_path_element($elename, $elepath);
 
+        $elename = 'vericitescoremod';
+        $elepath = $this->get_pathfor('vericite_scores/vericite_score');
+        $paths[] = new restore_path_element($elename, $elepath);
+
+        $elename = 'vericitefiles';
+        $elepath = $this->get_pathfor('vericite_files/vericite_file');
+        $paths[] = new restore_path_element($elename, $elepath);
+
+        $elename = 'vericitetokens';
+        $elepath = $this->get_pathfor('vericite_tokens/vericite_token');
+        $paths[] = new restore_path_element($elename, $elepath);
+
         return $paths;
 
     }
@@ -47,6 +59,66 @@ class restore_plagiarism_vericite_plugin extends restore_plagiarism_plugin {
                 $data->cm = $this->task->get_moduleid();
 
                 $DB->insert_record('plagiarism_vericite_config', $data);
+            }
+        }
+    }
+
+    public function process_vericitescoremod($data) {
+        global $DB;
+
+        if ($this->task->is_samesite() && !$this->existingcourse) {
+            if (! is_object($data)) {
+                $data = (object) $data;
+            }
+            $recexists = $DB->record_exists(
+                'plagiarism_vericite_score',
+                array('timeretrieved' => $data->timeretrieved, 'cm' => $this->task->get_moduleid())
+            );
+            if (!$recexists) {
+                $data = (object)$data;
+                $data->cm = $this->task->get_moduleid();
+
+                $DB->insert_record('plagiarism_vericite_score', $data);
+            }
+        }
+    }
+
+    public function process_vericitefiles($data) {
+        global $DB;
+
+        if ($this->task->is_samesite() && !$this->existingcourse) {
+            $data = (object)$data;
+            $recexists = false;
+            if (!empty($data->identifier)) {
+                $recexists = $DB->record_exists(
+                    'plagiarism_vericite_files', array('identifier' => $data->identifier)
+                );
+            }
+            if (!$recexists) {
+                $data->cm = $this->task->get_moduleid();
+                $data->userid = $this->get_mappingid('user', $data->userid);
+
+                $DB->insert_record('plagiarism_vericite_files', $data);
+            }
+        }
+    }
+
+    public function process_vericitetokens($data) {
+        global $DB;
+
+        if ($this->task->is_samesite() && !$this->existingcourse) {
+            $data = (object)$data;
+            $recexists = false;
+            if (!empty($data->identifier)) {
+                $recexists = $DB->record_exists(
+                    'plagiarism_vericite_tokens', array('identifier' => $data->identifier)
+                );
+            }
+            if (!$recexists) {
+                $data->cm = $this->task->get_moduleid();
+                $data->userid = $this->get_mappingid('user', $data->userid);
+
+                $DB->insert_record('plagiarism_vericite_tokens', $data);
             }
         }
     }
